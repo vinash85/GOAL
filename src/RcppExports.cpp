@@ -291,34 +291,3 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
-// filter_in
-Rcpp::List filter_in(Rcpp::List obj, bool parseFeature, double threshold);
-RcppExport SEXP GOAL_filter_in(SEXP objSEXP, SEXP parseFeatureSEXP, SEXP thresholdSEXP) {
-BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< Rcpp::List >::type obj(objSEXP );
-        Rcpp::traits::input_parameter< bool >::type parseFeature(parseFeatureSEXP );
-        Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP );
-        Rcpp::List __result = filter_in(obj, parseFeature, threshold);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
-END_RCPP
-}
-// ficorr
-Rcpp::NumericVector ficorr();
-RcppExport SEXP GOAL_ficorr() {
-BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::NumericVector __result = ficorr();
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
-END_RCPP
-}

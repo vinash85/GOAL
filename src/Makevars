@@ -2,5 +2,5 @@
 PKG_LIBS = -ltrng4 `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -lransampl -fopenmp -lgomp  -L/Library/Frameworks/R.framework/Resources/lib -lRlapack
 OBJECTS = Matrix.o MatrixFrame.o RRNG.o RNG.o FSF_nmix.o LogitWrapper.o \
 	PolyaGamma.o PolyaGammaAlt.o PolyaGammaSP.o InvertY.o \
-	RcppExports.o  eeSNP_regress.o epi_eQTL.o temp.o
+	RcppExports.o  eeSNP_regress.o epi_eQTL.o 
 PKG_CPPFLAGS = -fopenmp -lgomp -lransampl -I/Users/avi/Library/R/3.0/library/RcppProgress/include/ -DUSE_R -DNDEBUG -DDISABLE_SINGLE -DNTHROW -DDISABLE_FIO## -Wall   
