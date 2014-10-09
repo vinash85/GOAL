@@ -29,6 +29,34 @@ void center_norm(mat & xx)
 }
 
 using namespace arma;		// shorthand
+typedef  std::vector<int> index_t;
+// [[Rcpp::depends("RcppArmadillo")]]
+// [[Rcpp::export]]
+arma::mat mvrnormArma(int n, arma::vec mu, arma::mat sigma) {
+    int ncols = sigma.n_cols;
+    arma::mat Y = arma::randn(n, ncols);
+    return arma::repmat(mu, 1, n).t() + Y * arma::chol(sigma);
+}
+
+vec logistic(vec x)
+{
+    return(1/(1 +exp(-(x))));
+}
+double logistic(double x)
+{
+    return(1/(1 +exp(-(x))));
+}
+
+double logit(double x)
+{
+    return(log(x/(1-x)));
+}
+vec logit(vec x)
+{
+    return(log(x/(1-x)));
+}
+
+using namespace arma;		// shorthand
 int bernoulli(double xx)
 {
     vec temp = randu(1);
@@ -529,7 +557,7 @@ void logistic_variable_selection_mcmc( arma::mat x, arma::vec y, arma::vec& gamM
 using namespace arma;		// shorthand
 // [[Rcpp::depends("RcppArmadillo")]]
 // [[Rcpp::export]]
-Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, int negtrain_num =1000, double ratio = 1, double gamMa_thres = .9, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1)
+Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, int negtrain_num =1000, double ratio = 1, double gamMa_thres = .5, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1)
 {
     //regulator_prior = 0 : implies no re-estimation of alpha. num_logit_train = -1: no threshold is applied.
     if(gamMa_thres ==0) {
@@ -1408,18 +1436,6 @@ Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairF
 	    int logitIter = 2;
 	    for (int logitCnt = 0; logitCnt < logitIter; logitCnt++) {
 		if(balance){
-		    //cout<< "here" << gamMa_rateAcc.n_cols<<endl;
-		    if(usebeTaprob) beTaABS = mean(beTaAcc,1);
-		    //cout<< "here1" <<gamMaABS.size() << endl;
-		    //if((iter+1) >= accIter){
-			//if (((iter+1) % accIter)==0) { 
-			    //beTaABS = ABS(beTaAcc)/accIter;
-			    //gamMaABS = sum(gamMa_rateAcc);
-			//}
-		    //} else {
-			//beTaABS = ABS(beTa);
-			//gamMaABS = gamMa;
-		    //}
 		    colvec nonzero_prob;
 		    if (usebeTaprob) {
 			nonzero_logitInx = ((gamMa > gamMa_thres) % (beTaABS > beTa_thres)); 
@@ -1430,17 +1446,10 @@ Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairF
 		    colvec zero_prob = ones(zero_logit.size());
 		    zero_prob = zero_prob - gamMaABS(zero_logit);
 		    int postrain_num = (num_logit_train > -1) ? min( nonzero_logit.size()*ratio , num_logit_train/2):  nonzero_logit.size();
-		    //int negtrain_num = (num_logit_train > -1) ? min( zero_logit.size()*ratio , num_logit_train/2):  zero_logit.size();
-		    //int train_num = min(postrain_num, negtrain_num);
 		    int train_num = postrain_num;
-		    //negtrain_num = train_num*2;
-		    //negtrain_num = 10000;
-		    //train_num = min(num_logit_train/2, train_num);
-		    //num_logit_postrain = min( num_logit_train/2,  nonzero_logit * ratio) ;
-		    //int num_logit_negtrain = min( num_logit_train/2,  (p - nonzero_logit)*ratio) ;
 		    logit_freq.zeros();
 		    geneEpi_freq.zeros();
-		    cout <<"train_num \t"<< train_num << "\t" << negtrain_num << "\t" << train_num << "\t"<< gamMa_thres    << endl;
+		    //cout <<"train_num \t"<< train_num << "\t" << negtrain_num << "\t" << train_num << "\t"<< gamMa_thres    << endl;
 		    if(train_num > (f/2 +1) ){
 			ret1 = sample(nonzero_logit.size(), Named("size", train_num), Named("prob", nonzero_prob),Named("replace", false));
 			for (int tt = 0; tt < ret1.size(); tt++) 
@@ -1450,9 +1459,6 @@ Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairF
 			ret1 = sample(nonzero_logit.size(), Named("size", f/2.0 + 1), Named("prob", nonzero_prob),Named("replace", true));
 			for (int tt = 0; tt < ret1.size(); tt++) 
 			logit_freq(nonzero_logit(ret1[tt] -1)) = logit_freq(nonzero_logit(ret1[tt] -1)) + 1;
-			//ret1 = sample(p, Named("size", f/2 + 1), Named("prob", nonzero_prob), Named("replace", true));
-			//for (int tt = 0; tt < ret1.size(); tt++) 
-			//logit_freq(ret1[tt] -1) = logit_freq(ret1[tt] -1) + 1;
 		    }
 		    ret2 = sample(p , Named("size", negtrain_num),  Named("replace", false));
 		    for (int tt = 0; tt < ret2.size(); tt++) 
@@ -1697,7 +1703,7 @@ Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairF
 using namespace arma;		// shorthand
 // [[Rcpp::depends("RcppArmadillo")]]
 // [[Rcpp::export]]
-Rcpp::List epi_eQTL_dissecting(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, double ratio = .5, double gamMa_thres = .9, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 1, double prior = .1)
+Rcpp::List eQTL_empirical_prior(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, double ratio = .5, double gamMa_thres = .9, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 1, double prior = .1)
 {
     //regulator_prior = 0 : implies no re-estimation of alpha. num_logit_train = -1: no threshold is applied.
     #ifdef _OPENMP
