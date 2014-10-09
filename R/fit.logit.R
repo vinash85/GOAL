@@ -17,7 +17,7 @@ fit.logit <- function(yy, xx, B.inv=rep(1/100, dim(xx)[2]),  maxiter = 2000, bur
     Lt.inv <- solve(a=t(L), b=diag(1,length(B.inv)))
     V.w <- solve(a=L, b=Lt.inv)
     m.w <- V.w %*% (t(xx) %*% (yy-.5)) # this is like omegafg
-    bb <- mvrnorm(n=1, mu = m.w, Sigma=V.w)
+    bb <- mvrnormArma(n=1, mu = m.w, Sigma=V.w)
     if((iter %%thin==0)  && (iter > burnIn)){
       bb.mat[,count] <- bb; count <- count + 1;
     }

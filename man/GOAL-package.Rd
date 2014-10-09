@@ -1,40 +1,37 @@
 \name{GOAL-package}
 \alias{GOAL-package}
-\alias{GOAL}
+\alias{GOAL-package}
 \docType{package}
 \title{
-What the package does (short line)
-~~ package title ~~
+  Genetics Omics Assciation resolve Linkage (GOAL)
 }
 \description{
-More about what it does (maybe more than one line)
-~~ A concise (1-5 lines) description of the package ~~
+GOAL implements eQTeL model that integrates epigenetic and genetic to infer causal
+SNP that regulate expression. GOAL estimates regulatory potential and interaction 
+potential of a SNP, and use this as prior of SNP to be expression regulators. 
 }
 \details{
 \tabular{ll}{
 Package: \tab GOAL\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
-Date: \tab 2014-09-08\cr
-License: \tab What license is it under?\cr
+Date: \tab 2014-10-08\cr
+License: \tab GPL (>=3.0)\cr
 }
-~~ An overview of how to use the package, including the most important functions ~~
+The main function of GOAL, the input is 1) SNP matrix 2) gene matrix 3) epigenetic feature, 4) pair feature, and 5) LD block. A simulate data can be generate using generate.epieQTL.logistic function.
 }
 \author{
-Who wrote it
-
-Maintainer: Who to complain to <yourfault@somewhere.net>
-~~ The author and/or maintainer of the package ~~
+Avinash Das Sahu <vinash85@umiacs.umd.edu>, Sridhar Hannenhalli <sridhar@umiacs.umd.edu>
 }
 \references{
-~~ Literature or other references for background information ~~
+     Avinash Das, MagNet Consortium, Shane Jensen, Sridhar Hannenhalli. Bayesian integration of genetics and epigenetics detects causal regulatory SNPs underlying expression variability. (Unpublished).
+
 }
-~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R documentation directory ~~
-\keyword{ package }
+\keyword{ eQTL }
 \seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
+ \code{\link[GOAL:GOAL]{GOAL}} 
 }
+
 \examples{
-~~ simple examples of the most important functions ~~
+
 }
