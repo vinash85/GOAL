@@ -1,0 +1,106 @@
+PackratFormat: 1.4
+PackratVersion: 0.4.0.12
+RVersion: 3.1.0
+Repos: CRAN=http://cran.rstudio.com
+
+Package: BayesLogit
+Source: CRAN
+Version: 0.5.1
+Hash: 386a6d82c8ea46489df0318a99d7e6f5
+
+Package: bitops
+Source: CRAN
+Version: 1.0-6
+Hash: cb26464a8321628636b547518994c931
+
+Package: brew
+Source: CRAN
+Version: 1.0-6
+Hash: 9d92cc5ac60123fdb7b0daa3ae83bf99
+
+Package: devtools
+Source: CRAN
+Version: 1.6
+Hash: 39c662e72bf62c09de812cfedbe9d1d2
+Requires: digest, evaluate, httr, jsonlite, memoise, RCurl, rstudioapi,
+    whisker
+
+Package: digest
+Source: CRAN
+Version: 0.6.4
+Hash: e4bf0e79b15a352510aff0de905d31e2
+
+Package: evaluate
+Source: CRAN
+Version: 0.5.5
+Hash: 20881970e590ee68de97a468694db7b0
+Requires: stringr
+
+Package: httr
+Source: CRAN
+Version: 0.5
+Hash: 68a70bdd16fb949a12e4fda7f31def00
+Requires: digest, jsonlite, RCurl, stringr
+
+Package: jsonlite
+Source: CRAN
+Version: 0.9.12
+Hash: 08b7b0965550f20290b35a70f22f2215
+
+Package: MASS
+Source: CRAN
+Version: 7.3-31
+Hash: f95c54e3101311efa55604c56be306af
+
+Package: memoise
+Source: CRAN
+Version: 0.2.1
+Hash: fc52fa39dfd216c44d64812ff31b1c67
+Requires: digest
+
+Package: packrat
+Source: github
+Version: 0.4.0.12
+Hash: e738f79a22521c57fad67a1679302385973cd958
+GithubRepo: packrat
+GithubUsername: rstudio
+GithubRef: v0.98.1000
+GithubSha1: e738f79a22521c57fad67a1679302385973cd958
+
+Package: Rcpp
+Source: CRAN
+Version: 0.11.3
+Hash: d9cc0a13885961b2d004cf73b0fb68dd
+
+Package: RcppArmadillo
+Source: CRAN
+Version: 0.4.450.1.0
+Hash: bf683b8e3ea56a532532765edafc87cd
+Requires: Rcpp
+
+Package: RCurl
+Source: CRAN
+Version: 1.95-4.3
+Hash: 158377109f939084a72f240125f821d3
+Requires: bitops
+
+Package: roxygen2
+Source: CRAN
+Version: 4.0.2
+Hash: 44172ff2d8beac88abb92535d89c6aaa
+Requires: brew, digest, Rcpp, stringr
+
+Package: rstudioapi
+Source: CRAN
+Version: 0.1
+Hash: 5bd4449a873ec652a05c932312dcf04b
+
+Package: stringr
+Source: CRAN
+Version: 0.6.2
+Hash: cdde0cfa0f52cffeaca23a11a3899779
+
+Package: whisker
+Source: CRAN
+Version: 0.3-2
+Hash: 186ab2937fec1694c8a63009a2389c4e
