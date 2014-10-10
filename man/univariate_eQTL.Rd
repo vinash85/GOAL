@@ -31,6 +31,9 @@ univariate_eQTL(mask2, x, y, numRegulators, threads = 1L)
 
 }
 
+\seealso{
+ \code{\link[GOAL:multivariate_eQTL]{multivariate_eQTL}} 
+}
 \examples{
 featureStat= list(enhancer=list(mean=rep(2, 7), cov=diag(7)) ,
 		  random= list(mean=rep(0, 7), cov=2*diag(7)))

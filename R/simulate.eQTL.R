@@ -5,10 +5,10 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
     if (!is.null(seed)) set.seed(seed)
     #numSNP  <- numSNP
     numSNPAll <- ceiling(numSNP *( numGenes/2 + .5))
-    ldblock =4 
+    ldblock =2 
     indep.SNP <- ceiling(numSNPAll/ldblock)
     x.indep <- matrix(sample(x=c(0,1,2,NA) ,size= indep.SNP*numSamp, replace=T , prob=c(.6, .25, .15, .002)), ncol=indep.SNP, nrow=numSamp)
-    x <- matrix( rbind(x.indep,x.indep, x.indep, x.indep), nrow=numSamp)[,1:numSNPAll]  
+    x <- matrix( rbind(x.indep,x.indep), nrow=numSamp)[,1:numSNPAll]  
     x.nona = x
     #cat("here")
     x.nona[is.na(x)]=0
@@ -16,7 +16,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
     nenhancer	<- ceiling(ev/evSNP )
     mask2 <- matrix(0, numGenes*numSNP,2)
     xx <- matrix(0, numSamp, numGenes*numSNP)
-    enhancer  <- enhancerLDblock <- list()
+    enhancer.out <- enhancer  <- enhancerLDblock <- list()
     beTa <- gamMa <- numeric(numGenes* numSNP)
     y <- matrix(0, numSamp, numGenes)
     for(gene in seq(numGenes)){
@@ -24,26 +24,29 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
 	gene.end  <- gene.start +  numSNP - 1
 	xinx.start  <- ceiling(numSNP/2 * (gene -1) + 1)
 	xinx.end  <- xinx.start +  numSNP - 1
-	enh <- sample(seq(2, numSNP, ldblock), size=nenhancer[gene])
+	enh <- sample(seq(1, numSNP, ldblock), size=nenhancer[gene])
 	beTa1 <- numeric(numSNP)
-	beTa1[enh] <- rnorm(n=length(enh),sd=2) # change it later to take higher values for gamMa.prob
+	beTa1[enh] <- rnorm(n=length(enh),sd=2) 
+	xx[,gene.start:gene.end] = x[, xinx.start:xinx.end]
 	y.predict <- x.nona[, xinx.start:xinx.end] %*% beTa1
 	fac <- c(sqrt(ev[gene] / var(y.predict) ))
 	y[,gene] = y.predict * fac + rnorm(n=numSamp, sd=sd(y.predict)) * sqrt(1-ev[gene] )
 	beTa1 <- beTa1*fac
 	beTa[gene.start:gene.end] = beTa1
-	gamMa[gene.start + enh - 1]  <- 1
+	gamMa[gene.start + enh -1]  <- 1
 	mask2[gene.start:gene.end,] = cbind(rep(gene, numSNP), gene.start:gene.end)
-	xx[,gene.start:gene.end] = x[, xinx.start:xinx.end]
-	enhancer[[gene]]  <- xinx.start + enh 
-	enhancerLDblock[[gene]]  <- c( xinx.start + enh - 1,  xinx.start + enh, xinx.start + enh + 1 , xinx.start + enh + 2) 
+	enhancer[[gene]]  <- xinx.start + enh -1 
+	enhancer.out[[gene]] <- gene.start + enh -1
+	enhancerLDblock[[gene]]  <- c( xinx.start + enh -1,  xinx.start + enh ) 
     }
-    #browser()
+    browser()
     #noneeSNP.enhancer  <- sample(seq(1, numSNPAll,2), size=nenhancer*numGenes*5, replace=F)  
     #enhancer1  <-  unique(c(unlist(enhancer), noneeSNP.enhancer)) 
     enhancerLDblock  <-  c(unlist(enhancerLDblock)); 
     snpinx <- 1:numSNPAll;
-    noneeSNP.enhancer  <- sample(snpinx[!(snpinx %in% enhancerLDblock)], size=sum(nenhancer)*5, replace=F)  
+    temp1 <- snpinx[!(snpinx %in% enhancerLDblock)]
+    if (length(temp1) < sum(nenhancer) ) stop("increase number of SNP per gene, too many enhancers")
+    noneeSNP.enhancer  <- sample(temp1, size=sum(nenhancer), replace=F)  
     enhancer1  <-  unique(c(unlist(enhancer), noneeSNP.enhancer)) 
     
     nonenhancer <- which( !(seq(numSNPAll) %in% enhancer1))
@@ -62,7 +65,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
 	gene.start  <- numSNP * (gene -1) + 1
 	gene.end  <- gene.start +  numSNP - 1
 	xinx.start  <- ceiling(numSNP/2 * (gene -1) + 1)
-	print(xinx.start )
+	#print(xinx.start )
 	xinx.end  <- xinx.start +  numSNP - 1
 	featureAll[gene.start: gene.end, ] = feature[xinx.start:xinx.end, ] 
 	theta[gene.start: gene.end]  <-  theta.temp[xinx.start:xinx.end]
@@ -81,7 +84,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
     const <- cbind(1, featureAll) %*% matrix( alpHa, ncol=1)
     gamMa.prob <- logistic(const)
     #confusion.matrix 
-    object = c(list(x=xx, y=y, y.predict=y.predict, feature=featureAll, alpHa=alpHa, gamMa=gamMa, gamMa.prob=gamMa.prob, beTa=beTa, enhancer = enhancer, mask2 = mask2))
+    object = c(list(x=xx, y=y, y.predict=y.predict, feature=featureAll, alpHa=alpHa, gamMa=gamMa, gamMa.prob=gamMa.prob, beTa=beTa, enhancer = enhancer.out, theta=theta, mask2 = mask2))
     class(object) = "eeSNP.model5"
     return(object)
 }

@@ -75,9 +75,9 @@
 }
 
 \examples{
-  featureStat= list(enhancer=list(mean=rep(2, 7), cov=diag(7)) ,
-  random= list(mean=rep(0, 7), cov=2*diag(7)))
-  obj <- generate.epieQTL.logistic( numSNP = 300, avg.eSNP=5,numGenes = 100, numSamp=50, numFeature=7, featureStat= featureStat, seed=NULL, evSNP =0.15)
+  featureStat= list(enhancer=list(mean=rep(1, 7), cov=diag(7)) ,
+  random= list(mean=rep(0, 7), cov=diag(7)))
+  obj <- generate.epieQTL.logistic( numSNP = 300, avg.eSNP=5,numGenes = 100, numSamp=1000, numFeature=7, featureStat= featureStat, seed=NULL, evSNP =0.15)
   obj$pairFeature.mat <- matrix(0,0,0 )
   x1 <- obj$x
   x1[is.na(obj$x)] <- 0
@@ -86,25 +86,24 @@
   numF <- dim(obj$feature)[2]+ pairf + 1 
   gamMa <- as.matrix(rep(0, nrow(obj$mask2)) )
   alpHa <- as.matrix(rep(0,numF))
-  alpHa <- obj$alpHa
   temp <- rep(1: ceiling(nrow(obj$mask2)/2), each=2)
   mask3 = cbind( obj$mask2, temp)  
 
-  regulator_prior = 1/10
+  regulator_prior = .2 
   B_inv_alpHa = rep(1/1000, numF)
   B_inv_alpHa[1] = 1/10000
-  prior <- .2
+  prior <- .04
   rho <- 100 
   out <- GOAL(x=x1, y=obj$y, feature=obj$feature, pairFeature=obj$pairFeature, 
-  mask = mask3, alpHa=alpHa, ratio =1, gamMa = gamMa,  estimate_alpha=FALSE,
-  estimate_beta=TRUE, B_inv_alpHa=rep(1/1000,  numF), itermax = 20, thin= 1,
+  mask = mask3, alpHa=alpHa, ratio =1, gamMa = gamMa,  estimate_alpha=TRUE,
+  estimate_beta=TRUE, B_inv_alpHa=rep(1/1000,  numF), itermax = 200, thin= 1,
   burnIn=0, threads=1, gamMa_thres = .5, beTa_thres=0, balance=TRUE, 
   use_raoblackwell =FALSE, logistic_variable_selection=FALSE, num_logit_train=500,
   regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho)
 }
 \seealso{
- \code{\link[GOAL:eQTL_empirical_prior]{eQTL_empirical_prior}} 
- \code{\link[GOAL:generate.epieQTL.logistic]{generate.epieQTL.logistic}} 
+ \code{\link[GOAL:eQTL_empirical_prior]{eQTL_empirical_prior,}} 
+ \code{\link[GOAL:generate.epieQTL.logistic]{ generate.epieQTL.logistic}} 
 }
 \author{Avinash Das }
 

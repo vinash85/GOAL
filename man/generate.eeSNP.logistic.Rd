@@ -7,9 +7,11 @@
 }
 
 \usage{
-  generate.epieQTL.logistic ( numSNP = 512, avg.eSNP=20,numGenes = 1, numSamp=20, numFeature=9,
+  generate.epieQTL.logistic ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
+  numSamp=20, numFeature=9,
   featureStat= list(enhancer=list(mean=rep(2,numFeature), cov= 2* diag(numFeature)),
-  random=list(mean=rep(1,numFeature), cov=4* diag(numFeature))), seed=NULL,   evSNP =0.025)
+  random=list(mean=rep(1,numFeature), cov=4* diag(numFeature))), 
+  seed=NULL,   evSNP =0.025)
 }
 \arguments{
   \item{numSNP}{The number of SNP per gene P/G.}
@@ -43,6 +45,10 @@
 
 }
 
+\seealso{
+ \code{\link[GOAL:eQTL_empirical_prior]{eQTL_empirical_prior, }} 
+ \code{\link[GOAL:generate.epieQTL.logistic]{generate.epieQTL.logistic}} 
+}
 \examples{
 featureStat= list(enhancer=list(mean=rep(2, 7), cov=diag(7)) ,
 		  random= list(mean=rep(0, 7), cov=2*diag(7)))
