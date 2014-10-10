@@ -39,7 +39,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
 	enhancer.out[[gene]] <- gene.start + enh -1
 	enhancerLDblock[[gene]]  <- c( xinx.start + enh -1,  xinx.start + enh ) 
     }
-    browser()
+    #browser()
     #noneeSNP.enhancer  <- sample(seq(1, numSNPAll,2), size=nenhancer*numGenes*5, replace=F)  
     #enhancer1  <-  unique(c(unlist(enhancer), noneeSNP.enhancer)) 
     enhancerLDblock  <-  c(unlist(enhancerLDblock)); 
@@ -70,7 +70,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
 	featureAll[gene.start: gene.end, ] = feature[xinx.start:xinx.end, ] 
 	theta[gene.start: gene.end]  <-  theta.temp[xinx.start:xinx.end]
     }
-    browser()
+    #browser()
     en.inx = which(theta > 0)
     if (length(en.inx) >  nrow(featureAll)/2) stop("increase number of SNP per gene, too many enhancers")
     nenh =which(!( (1:nrow(featureAll) ) %in% en.inx))

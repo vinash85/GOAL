@@ -99,7 +99,7 @@
   estimate_beta=TRUE, B_inv_alpHa=rep(1/1000,  numF), itermax = 200, thin= 1,
   burnIn=0, threads=1, gamMa_thres = .5, beTa_thres=0, balance=TRUE, 
   use_raoblackwell =FALSE, logistic_variable_selection=FALSE, num_logit_train=500,
-  regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho)
+  regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho, verbose=FALSE)
 }
 \seealso{
  \code{\link[GOAL:eQTL_empirical_prior]{eQTL_empirical_prior,}} 

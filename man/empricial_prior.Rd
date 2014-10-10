@@ -77,7 +77,7 @@ carefully because of epigenetic factors are highly correlated (i.e. it is good f
 }
 
 \examples{
-featureStat= list(enhancer=list(mean=rep(2, 7), cov=diag(7)) ,
+featureStat= list(enhancer=list(mean=rep(1, 7), cov=diag(7)) ,
 		  random= list(mean=rep(0, 7), cov=2*diag(7)))
 obj <- generate.epieQTL.logistic( numSNP = 300, avg.eSNP=5,numGenes = 100, numSamp=1000, numFeature=7, featureStat= featureStat, seed=NULL, evSNP =0.15)
 obj$pairFeature.mat <- matrix(0,0,0 )
@@ -98,10 +98,10 @@ B_inv_alpHa[1] = 1/10000
 prior <- 1/100
 rho <- 100 
 out <- eQTL_empirical_prior(x=x1, y=obj$y, feature=obj$feature, pairFeature=obj$pairFeature,
-        mask = mask3, alpHa=alpHa, ratio =1,  gamMa = gamMa,  estimate_alpha=T, estimate_beta=T, 
+        mask = mask3, alpHa=alpHa, ratio =1,  gamMa = gamMa,  estimate_alpha=TRUE, estimate_beta=TRUE, 
 	B_inv_alpHa=rep(1/1000,  numF), itermax = 20,  thin= 1, burnIn=0, threads=1, gamMa_thres = .5,
-       	beTa_thres=0, balance=T, use_raoblackwell =FALSE,  logistic_variable_selection=FALSE, 
-	num_logit_train=500, regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho)
+       	beTa_thres=0, balance=TRUE, use_raoblackwell =FALSE,  logistic_variable_selection=FALSE, 
+	num_logit_train=500, regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho, verbose=FALSE)
 }
 \seealso{
  \code{\link[GOAL:eQTL_empirical_prior]{eQTL_empirical_prior, }} 
