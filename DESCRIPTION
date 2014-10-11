@@ -10,6 +10,6 @@ Description: GOAL implement the eQTeL model that integrates genetic and epigenet
 License: GPL (>= 3)
 Imports:
     Rcpp (>= 0.11.2.3)
-Depends: MASS, BayesLogit
-LinkingTo: Rcpp, RcppArmadillo, MASS, BayesLogit
+Depends: MASS, BayesLogit, RcppProgress
+LinkingTo: Rcpp, RcppArmadillo, MASS, BayesLogit, RcppProgress
 LazyLoad: yes
