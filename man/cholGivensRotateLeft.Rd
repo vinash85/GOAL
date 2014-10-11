@@ -2,8 +2,7 @@
 \alias{cholGivensRotateLeft}
 \title{  Updating Cholesky decomposition when design matrix is rotated left}
 \description{
-  Updating Cholesky decomposition when design matrix is rotated left. This is useful 
-  in linear regression when covariate is already in design matrix.
+  The function updates Cholesky decomposition when design matrix is rotated left. This is useful  in linear regression when covariate is already in design matrix.
 }
 
 \usage{
@@ -17,8 +16,7 @@ cholGivensRotateLeft(TT, xx)
   \code{cholGivensRotateLeft()}   returns updated Cholesky decomposition. 
 }
 \details{
-  cholGivensRotateLeft efficiently by Given rotation update a Cholesky decomposition of a design matrix when
-  a columns are rotated left. 
+ Using Givens rotation cholGivensRotateLeft efficiently updates a Cholesky decomposition of a design matrix when its columns are rotated left. 
 }
 \references{
   \enumerate{

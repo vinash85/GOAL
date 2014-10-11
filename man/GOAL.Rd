@@ -31,7 +31,7 @@
   \item{threads}{The number of maximum threads.}
   \item{balance}{Should positive and negative set be balanced in logistic regression?}
   \item{logistic_variable_selection}{Should variable be used in epigenetic and paired features? It is currently experimental stage not completely tested.}
-  \item{oversample}{Should oversample be used?}
+  \item{oversample}{Should oversample be used?, Not functional currently}
   \item{sample_logit}{Not functional.}
   \item{use_raoblackwell}{Should Rao blackwellization should be used?}
   \item{num_logit_train}{The number of instances in positive set in logistic regression. If set to -1 all positive set will be taken in training.}

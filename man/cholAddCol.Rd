@@ -2,7 +2,8 @@
 \alias{cholAddCol}
 \title{  Updating Cholesky decomposition on addition of column to design matrix}
 \description{
-Updating Cholesky decomposition on addition of column to design matrix
+
+ The function updates Cholesky decomposition on addition of column to design matrix
 }
 
 \usage{
@@ -16,7 +17,7 @@ cholAddCol(TT, xx)
   \code{cholAddCol()}   returns updated Cholesky decomposition. 
 }
 \details{
-  cholAddCol efficiently  by Given rotation update a Cholesky decomposition of a design matrix when a column is added to design matrix. 
+  Using Givens rotation cholAddCol efficiently updatea a Cholesky decomposition of a design matrix when a column is added to the design matrix. 
 }
 \references{
   \enumerate{

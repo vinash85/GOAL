@@ -35,7 +35,7 @@
   \item{gamMa.prob}{An P dimensional interacting potentials vector.}
 }
 \details{
-  generate.epieQTL.logistic generates a simulated data for eQTeL model. It generates
+  generate.epieQTL.logistic generates simulated data for eQTeL model. It generates
   SNPs matrix, gene matrix, feature matrix and also real parameters of eQTeL model (alpHa,beTa, gamMa and gamMa.prob). 
  }
 \references{

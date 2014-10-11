@@ -22,7 +22,7 @@ univariate_eQTL(mask2, x, y, numRegulators, threads = 1L)
   \code{univariate_eQTL()} Returns a vector of explained variance  for each gene.  
 }
 \details{
-  univariate_eQTL is standard univariate eQTL analysis. It calculate correlation between SNPs and gene pair and estimate explained variance.    
+  univariate_eQTL is standard univariate eQTL analysis. It calculates correlation between SNPs and gene pair and estimates explained variance.    
 }
 \references{
   \enumerate{

@@ -1,8 +1,8 @@
 \name{eQTL_empirical_prior}
 \alias{eQTL_empirical_prior}
-\title{Function that implement eQTL with empirical interacting regulator priors }
+\title{Function that implements eQTL with empirical interacting-regulatory priors }
 \description{
-Function that implement eQTL with empirical interacting regulator priors 
+Function that implement eQTL with empirical interacting-regulatory priors 
 }
 \usage{
   eQTL_empirical_prior(x, y, feature, pairFeature, mask2, alpHa, gamMa, 
@@ -15,8 +15,8 @@ Function that implement eQTL with empirical interacting regulator priors
 \arguments{
   \item{x}{An N x P SNP matrix; with N samples and P SNPs.}
   \item{y}{An N x G gene matrix; with N samples and G genes.}
-  \item{feature}{A P x F feature matrix corresponding to P SNPs; F is number of features.}
-  \item{pairFeature}{A P x F' paired feature matrix corresponding to P SNPs; F is number of paired Features.}
+  \item{feature}{A P x F feature matrix corresponding to P SNPs, and F features.}
+  \item{pairFeature}{A P x F' paired feature matrix corresponding to P SNPs and F' features}
   \item{mask2}{A P x 3 matrix that maps which SNPs are considered for which genes. Column 1: genes, column 2: SNPs, Column 3: LD block}
   \item{alpHa}{An F+F' dimensional initial feature importance parameters.}
   \item{gamMa}{An F+F' dimensional initial inclusion for each SNPs.}
@@ -33,10 +33,10 @@ Function that implement eQTL with empirical interacting regulator priors
   \item{sample_logit}{Not functional.}
   \item{use_raoblackwell}{Should Rao blackwellization should be used?}
   \item{num_logit_train}{The number of instances in positive set in logistic regression. If set to -1 all positive set will be taken in training.}
-  \item{ratio}{The ratio of instance positive set to all positive in logistic regression, if num_logit_train < all positive.} 
+  \item{ratio}{The ratio of instances in positive set to all positive in logistic regression, if num_logit_train < all positive.} 
   \item{negtrain_num}{The number of instances in negative set in logistic regression.}
   \item{regulator_prior}{Prior of a region to be regultory.}
-  \item{accIter}{Number of internal iteration per MCMC iteration in logistic regression.}
+  \item{accIter}{Number of internal iterations per MCMC iteration in logistic regression.}
   \item{rho}{Prior amplification factor.}
   \item{prior}{Prior of SNP (not regulator) to be expression regulator.}
   \item{gamMa_thres}{ Threshold on gamMa for SNP to be in positive SNP. Keep default value=0.5}
@@ -60,10 +60,11 @@ Function that implement eQTL with empirical interacting regulator priors
 #\deqn{   Y_j |\beta_j, X,\gamma_j  = Norm{X_{\gamma,j} \beta_{\gamma,j}, \sigma_j^2 I)}}
  The regression coefficient beta is non zero only if indicator variable gamma is nonzero.
 The prior of gamma depends on (i) epigenetic feature and (ii) pairwise feature of SNP-gene interaction as 
-\deqn{ \gamma = Bern(logistic(E) \alpha} 
-alpha is epigenetic importance. A  MCMC is used to make inference. It simultaneously estimate probability of SNP to be expression regulator (gamMa) and interacting regulator (gamMa_prob). It also estimate epigenetic importance. However, alpHa must be interpreted 
-carefully because of epigenetic factors are highly correlated (i.e. it is good for prediction purpose only). It also estimate beTa that is regression weights i.e. whether positive or negative effect on gene expression.    
-  The difference with this model with eQTeL model is that this is not full Bayesian model but interacting regulatory
+\deqn{ \gamma = Bern (logistic(E) \alpha} )
+alpha is epigenetic importance. A  MCMC is used to make inference. It simultaneously 
+estimates probability of SNP to be expression regulator (gamMa) and interacting regulator (gamMa_prob). It also estimates epigenetic importance. However, alpHa must be interpreted 
+carefully because epigenetic factors are highly correlated (i.e. it is good for prediction purpose only). It also estimates beTa or regression weights i.e. whether positive or negative effect on gene expression.    
+  The difference with this model between eQTeL model is that this is not full Bayesian model but interacting regulatory
   potential is  a used as empirical prior. There is no semi-supervised clustering unlike eQTeL model.
 }
 \references{
