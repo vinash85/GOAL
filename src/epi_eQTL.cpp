@@ -557,11 +557,11 @@ void logistic_variable_selection_mcmc( arma::mat x, arma::vec y, arma::vec& gamM
 using namespace arma;		// shorthand
 // [[Rcpp::depends("RcppArmadillo")]]
 // [[Rcpp::export]]
-Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, int negtrain_num =1000, double ratio = 1, double gamMa_thres = .5, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1)
+Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, int negtrain_num =1000, double ratio = 1, double gamMa_thres = .9, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1)
 {
     //regulator_prior = 0 : implies no re-estimation of alpha. num_logit_train = -1: no threshold is applied.
     if(gamMa_thres ==0) {
-	cout << "gamMa_thres =0" << endl;
+  cout << "gamMa_thres =0" << endl;
 	exit(0);
     }
     #ifdef _OPENMP
@@ -570,7 +570,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
     REprintf("Number of threads=%i\n", omp_get_max_threads());
     #endif
     double eQTL_threshold = 1; // 1- implies eQTL_threshold is ignored 
-    double regulator_threshold = 0; // 0- implies regulator_threshold is ignored 
+    double regulator_threshold = 0; // 0- implies regulator_threshold is ignored
     bool dual_filter = false;
     bool usebeTaprob = beTa_thres > 0 ? true : false; 
     bool Berger=true;
@@ -578,7 +578,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
     t2 = std::clock();
     float startOfepi_eQTL = float(t2);
     int localmaxiter =1; int bootstrap=50/localmaxiter; 
-    int num_out_samples = ceil(((double)(itermax - burnIn))/((double) thin));
+    int num_out_samples = floor(((double)(itermax - burnIn))/((double) thin));
     int p=mask2.n_rows,  n=y.n_rows, numGenes=y.n_cols; //, numSamp_logit = n/2, ;
     //cout << 454 << endl;
     mat feature1 = join_rows( ones(p,1), feature);
@@ -597,15 +597,17 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
     //y = y - (ones(n) * mean(y)) ;
     center_norm(y);
     center_norm(x);
+    double LDthres = 0.9 * n-1; //LD threshold in terms of Pearson correlation coefficient. 
     //x = x - (ones(n) * mean(x)) ;
     colvec xTy(p); 
     field<mat> TT(numGenes); 
     field<mat> xTx(numGenes); 
     field<uvec> mask(numGenes); 
     field<field<uvec> > LD(numGenes); 
+    field<vec> bf_LD(numGenes); 
     vec gg(numGenes); gg.zeros(); 
     uvec gene1_start(numGenes) , gene1_end(numGenes); gene1_start.zeros(); gene1_end.zeros();
-    vec cc(numGenes); cc.fill(10.0); double cc_epi =10; // g-priors
+    vec cc(numGenes); cc.fill(200); double cc_epi =10; // g-priors
     vec evAll(numGenes); evAll.zeros();
     int count  = 0;
     colvec logit_freq, geneEpi_freq, logit_freqtop, logit_freqbottom,  logit_freq_nonzero,  zz, bf(p), bf_single(p), tau(4);
@@ -653,8 +655,16 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
     cout << " a11 \t"  << a11 << "\t a10 \t" << a10 << endl;  
     gamMa_prob =  zeros(p); gamMa_prob.fill(0.5);//this is theta
     //double bf_max = -logit(exp(regulator_prior * ( log(a11))  + (1-regulator_prior) * log(a10)));
-    double bf_max = max(logit(.75) - logit(a11), min(logit(.9) - logit(a11) , -logit(a10)/2)) ;
+    //double avg_a1 = exp(a11 * log(a11) + (1-a10) * log(a10)) ; 
+    //double bf_max = max(logit(.75) - logit(avg_a1), min(logit(.9) - logit(avg_a1) , -logit(a10)/2)) ;
+    double avg_gamMa_prob = 0.75;
+    double avg_enh_a1 = exp(avg_gamMa_prob * log(a11) + (1-avg_gamMa_prob) * log(a10)) ;
+    double bf_max = 19 * (1-avg_enh_a1)/(avg_enh_a1); /// at enhancer probability = .75 and bf_max, posterior probability = 0.95
     cout << "bf_max" << bf_max <<endl;
+    double bf_min = -.01; double bf_thres = -12;
+    cout << "bf_min" << bf_min <<endl;
+
+    bf_max = log(bf_max); //bf_max is compared at log stage
 
 
     //# needed only  once
@@ -664,7 +674,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
     Rcpp::List out;
     bool display_progress = true;
     Progress progress(itermax, display_progress); 
-    double small = .0001;
+    double small = .01;
     rowvec varY; varY =  var(y);
     rowvec sigma2,  lambdal;
     sigma2 = lambdal = 1*varY/9; // estimate of sigma2 variance of residue
@@ -679,6 +689,8 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 
     // for theta regression 
     double sigma2_l =1,  sigma_l =1, lambdal_l = 0, nu_l =0, cc_l =10.0;
+    int gamMa_initialized =0; 
+    if( sum(gamMa) > 0) gamMa_initialized =1; 
 
 
     // initialize
@@ -732,6 +744,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 	    vec xTxdiag = xTx(gene).diag();
 	    //cout << 558<<endl;
 	    vec gamMaCurr = gamMa(span(gene1_start(gene),gene1_end(gene)));
+	    vec xTy_gene = xTy(span(gene1_start(gene),gene1_end(gene)));
 	    //cout << 559<<endl;
 	    nonzero_curr = find(gamMaCurr > 0); 
 	    int qq_curr  = nonzero_curr.size();
@@ -762,9 +775,10 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 
 	    int ldsize = p_curr;
 	    field<uvec> LDgene(ldsize,1);
+	    vec bf_LDgene(ldsize);
 	    int ldStart=0, ldEnd = 0, ldCnt = 0;
-	    uvec temp = LDCol(maskCurr);
-	    int lastld = temp(0);
+	    uvec tempLD = LDCol(maskCurr);
+	    int lastld = tempLD(0);
 	    uvec maskLD;
 	    vec bf_temp;
 	    int ldSize;
@@ -774,9 +788,9 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		//ldsize = LDgene.size(); 
 		//if(ldCnt > ( ldsize - 2) ) LDgene.resize(2*ldsize());
 		ldEnd = (ldinx < p_curr -1) ? (ldinx - 1) : ldinx;
-		if((lastld !=temp(ldinx))|| (ldinx == p_curr -1)|| ((temp(ldinx) < 0)&& ((ldEnd - ldStart) > 3  ))){ // negative values imply singletons
+		if((lastld !=tempLD(ldinx))|| (ldinx == p_curr -1)|| ((tempLD(ldinx) < 0)&& ((ldEnd - ldStart) >= 2  ))){ // negative values imply singletons // enter if block only at end of LD block.
 		    maskLD = maskCurr(span(ldStart, ldEnd)) -gene1_start(gene);
-		    //cout << "maskLD " << maskLD.t() << endl;
+		    //cout << "maskLD " << maskLD.t()<< " lasld"<<lastld << "tempLD(ldinx)) " << tempLD(ldinx)   << endl;
 		    //cout << xTx(gene).n_cols << " " << maskCurr(ldStart) << " " << maskCurr(ldEnd) <<  " " << ldStart << " " << ldEnd << endl;
 		    xTxcurr = (xTx(gene))(maskLD, maskLD); 
 		    TTtemp = chol( xTxcurr);
@@ -785,15 +799,18 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		    R2 = sum(square(WW))/y2(gene);
 		    //non-penalized for length version of bayesian factor qq is removed
 		    ggA = (n  - 1.0)/2.0 * log(1.0 + ccCurr) - (n -1.0 )/2.0 * log(1+ccCurr*(1.0-R2));
+		    bf_LDgene(ldinx) = exp(ggA);
 		    //ggA = -gg0Curr - (ldEnd -ldStart + 1)/2.0 * log(1 + ccCurr) - (n + nu(gene))/2.0 * log (nu(gene) * lambdal(gene) + y2(gene)  - sum(square(WW))/(1 + 1/ccCurr) );
 		    //R2_vec = square(xTy(maskLD))/(xTxdiag(maskLD) * y2(gene));
-		    bf_temp =  (n - 1.0)/2.0 * log(1.0 + ccCurr) - (n -1.0 )/2.0 * log(1+ccCurr*(1.0- (square(xTy(maskLD))/(xTxdiag(maskLD) * y2(gene))) ));  
+		    bf_temp =  (n - 2.0)/2.0 * log(1.0 + ccCurr) - (n -1.0 )/2.0 * log(1+ccCurr*(1.0- (square(xTy_gene(maskLD))/(xTxdiag(maskLD) * y2(gene))) )); //previously it was not exponential  
 		    //bf_temp =   -gg0Curr - 1.0/2.0* log(1 + ccCurr) - (n + nu(gene))/2.0 * log (nu(gene) * lambdal(gene) + y2(gene)  - (square(xTy( maskLD))/((1 + 1/ccCurr)*xTxdiag(maskLD) )) );
 		    //cout << "bf_temp" << bf_temp <<endl;
-		    bf_temp = bf_temp/sum(bf_temp) * ggA;
+		    // previously bf_temp was normalized
+		    /* bf_temp = bf_temp/sum(bf_temp) * ggA; */
 		    maxinx = find(bf_temp > bf_max);
 		    if(maxinx.size() >0)
 		    bf_temp(maxinx) = ones<vec>(maxinx.size()) * bf_max;
+		    bf_temp = exp(bf_temp);
 		    bf_single(maskLD + gene1_start(gene)) = bf_temp;
 		    //cout << "bf_single ld " << bf_single(maskLD + gene1_start(gene)) <<endl;
 		    LDgene(ldCnt, 0) = maskLD; 
@@ -801,15 +818,17 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		    ldCnt++;
 
 		}
-		lastld = temp(ldinx);
+		lastld = tempLD(ldinx);
 
 	    }
 	    //cout << ldCnt << " gene "  << endl;
 	    LD(gene) = LDgene.rows(0, ldCnt -1);
+	    bf_LD(gene) = bf_LDgene;
 	    //cout << LDgene(10) << endl; 
 
 	    //bf_single(span(gene1_start(gene), gene1_end(gene)))  =   - gg0Curr -1.0/2.0* log(1 + ccCurr) - (n + nu(gene))/2.0 * log (nu(gene) * lambdal(gene) + y2(gene)  - (square(xTy(span(gene1_start(gene), gene1_end(gene))))/((1 + 1/ccCurr)*xTxdiag )) );
 	    //cout << gene << "bf_single "  << bf_single(span(gene1_start(gene), gene1_end(gene))).t() << endl;
+	    //cout << gene << "bf_LD "  << bf_LD(gene).t() << endl;
 
 	    for (int i = gene1_start(gene); i < gene1_end(gene); i++) {
 		if(bf_single(i) != bf_single(i) ){
@@ -824,7 +843,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
     //cout << "nu" << nu.t() << endl;
     //cout << "gene_start " << gene1_start.t() <<endl;
     //cout << "gene_end " << gene1_end.t() <<(endl;
-
+    aTf = featureCat * alpHaAdj;
     double sumAlpHa = sum(alpHa);
     //double prior =  (p > (40* numGenes))?  ((20.0*numGenes)/p ): 0.05;
     //double prior =  (p > (100* numGenes))?  ((50.0*numGenes)/p ): 0.01;
@@ -842,7 +861,6 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 	if (Progress::check_abort() )
 	return out;
 	progress.increment();
-	aTf = featureCat * alpHa;
 	////cout << "running iteration " << iter << endl;
 	if(estimate_beta){
 	    logit_freq.zeros(); logit_freqtop.zeros(); logit_freqbottom.zeros();
@@ -876,6 +894,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		double gamMa_snpCurr, gamMa_probsnpCurr, tempd;
 		double ccCurr = cc(gene), sigma2Curr = sigma2(gene);
 		uvec  maskCurr =  mask(gene);
+		bool update_bf=true;
 
 		//#gibbs sampling;
 		p_curr = maskCurr.size();
@@ -899,7 +918,6 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		    mat TT1, TT_inv,VV, TT_proposal, TT_curr = TT(gene); // chol( x.cols(maskCurr(nonzero_curr)).t() * x.cols(maskCurr(nonzero_curr)) + small * eye(qq_curr, qq_curr))
 		    int gene_start = gene1_start(gene), gene_end = gene1_end(gene); 
 		    colvec xbeTa(n), xbeTaM(n), residue(n);
-		    vec  bf_singleCurr = bf_single(span(gene_start, gene_end)); 
 		    mat xTx_gene = xTx(gene); vec xTx_snp_gene;  
 		    vec  gamMaCurr = gamMa(span(gene_start, gene_end)); vec gamMa_inclusion = zeros(p_curr);
 		    vec logit_freqCurr = zeros(p_curr);
@@ -911,7 +929,11 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		    //double expalpHaF = sum(trans(alpHa(span(1,f-1))) * featureMeanCurr(span(1,f-1)));
 		    //if ((p_curr > (3*regulator_prior)) && (regulator_prior  > 0) ) alpHaCurr[0] = -log(p_curr/regulator_prior -1) - expalpHaF;
 		    //vec gamMa_probCurr = logistic(featureCat.rows(span(gene_start,gene_end)) * alpHaCurr);
-		    //alpHaCurr(0) = 0; 
+		    //alpHaCurr(0) = 0;
+		    //cout << "alpHa" << alpHa.t() << endl; 
+		    //cout << "gamMa" << sum(gamMa) << endl;
+		    //cout << "initialized" << gamMa_initialized << endl;
+		    //return out;
 
 
 		    double gg1, gg0, gg_proposal, R2, gg_curr = gg(gene);
@@ -939,7 +961,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 			gg_curr = (n - qq -1.0)/2.0 * log(1 + ccCurr) - (n -1.0 )/2.0 * log(1.0+ccCurr*(1.0-R2));
 		    }else gg_curr = 0;
 		    for (int localiter = 0; localiter < localmaxiter; localiter++) {
-			if((useGibbs) ||  (iter ==0)){
+			if((useGibbs) ||  ((iter ==0) && (gamMa_initialized ==0) )){
 			    for(int snp = 0;  snp < p_curr; snp++){
 				//cout << qq_curr<< " here "  << 243 << gene << endl;
 				if(gamMaCurr(snp) ==1){
@@ -1003,7 +1025,8 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 				//cout << 863 << "\t" << gg1 <<  "\t" << gg0  << "\t" << gamMa_probCurr(snp)  << "\t" <<  prior <<  "\t"<<  gg1 - gg0 + gamMa_probCurr(snp)+ log(prior/(1-prior)) << endl;
 				//gamMa_rate(snp) = logistic(gg1 - gg0 + gamMa_probsnpCurr);
 				//double pa1x = min(a11 * gamMa_probsnpCurr + a10 * (1 - gamMa_probsnpCurr) , prior);
-				double pa1x = a11 * gamMa_probsnpCurr + a10 * (1 - gamMa_probsnpCurr);
+				double pa1x;
+				pa1x = (iter==0)?  a10: a11 * gamMa_probsnpCurr + a10 * (1 - gamMa_probsnpCurr);
 				//cout << " pa1x \t" << pa1x << endl;
 				gamMa_rate(snp) = logistic(gg1 - gg0 +   logit(pa1x));
 				double max_rate = .99*aTfbin + .8*(1-aTfbin);
@@ -1123,94 +1146,214 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 			    if(use_raoblackwell) gamMa_inclusion = gamMa_inclusion + gamMa_rate;
 			    else gamMa_inclusion = gamMa_inclusion + gamMaCurr;
 			}else{
-			    int qqLD, qqLD_proposal, qq_proposal;
-			    uvec nonzero_proposal;
+			    int qqLD, qqLD_proposal, qq_proposal, qqLDLD, qqLDLD_proposal;
+			    uvec nonzero_proposal, maxinx, mininx;
 			    field<uvec> LDgene = LD(gene);
 			    int ldcnt = LDgene.size();
 			    uvec LDCurr, snps_inx;
 			    vec aTf_bin = logistic(aTfCurr);
 			    //vec pa1x_vec =   a11 * gamMa_probCurr + a10 * (1 - gamMa_probCurr);
 			    vec pa1x_vec =   exp(log(a11) * aTf_bin + log(a10) * (1 - aTf_bin));
+			    vec pa1x_vecneg = 1 - pa1x_vec;
+			    vec bf_singleCurr = bf_single(span(gene_start, gene_end));
+			    if(update_bf){
+				vec xTxdiag = xTx_gene.diag();
+				vec xTy_gene = xTy(span(gene_start, gene_end));
+				vec bf_temp;
+				for(int ldinx = 0;  ldinx < ldcnt; ldinx++){
+				    snps_inx = LDgene(ldinx);
+				    bf_temp =  (n - 2.0)/2.0 * log(1.0 + ccCurr) - (n -1.0 )/2.0 * log(1+ccCurr*(1.0- (square(xTy_gene(snps_inx))/(xTxdiag(snps_inx) * y2(gene))) )); 
+				    maxinx = find(bf_temp > bf_max);
+				    if(maxinx.size() >0)
+				    bf_temp(maxinx) = ones<vec>(maxinx.size()) * bf_max;
+				    mininx = find(bf_temp < bf_min);
+				    if(mininx.size() >0)
+				    bf_temp(mininx) = ones<vec>(mininx.size()) * bf_thres;
+				    bf_temp = exp(bf_temp);
+				    bf_singleCurr(snps_inx) = bf_temp;
+				}
+				 bf_single(span(gene_start, gene_end)) = bf_singleCurr;
+				//cout << "bf_single ld " << bf_single(snps_inx + gene1_start(gene)) <<endl;
+			    }
 			    //cout << 1030 << endl;
-			    vec proposal_gamMa = logistic(logit(pa1x_vec) + bf_singleCurr);
+			    //vec proposal_gamMa = logistic(logit(pa1x_vec) + bf_singleCurr);
+			    vec proposal_gamMa = bf_singleCurr % pa1x_vec;
+			    vec proposal_gamMaCurr;
+			    vec bf_LDgene = bf_LD(gene);
 			    //cout << 1031 << endl;
 			    vec Randu = randu<vec>(p_curr); // N(0, sigma_eff)
-			    double prior_proposal, prior_curr, trans_proposal, trans_curr;
-			    bfCurr = gamMaCurr;
+			    double prior_proposal, prior_curr, trans_proposal, trans_curr, prior_changeNotLD, trans_changeNotLD, pa1x_neg, pa1xNotLD_neg;
+			    //bfCurr = gamMaCurr;
+			    bfCurr = bf_singleCurr;
+			    uvec LDLDInx, nonzeroNotLD, nonzeroNotLD_proposal, zeroNotLD_proposal;
+			    uvec LDLD, zeroLDLDInx; 
+			    vec proposal_gamMaNotLD;
+				//uvec nonzeroLDLD, nonzeroLDLDInx, nonzeroLDLD_proposal, zeroLD_proposal, zeroNotLD_proposal;
+				//int cholEstimate;
 			    //gamMa proposal
 			    for(int ldinx = 0;  ldinx < ldcnt; ldinx++){
+				//cout << 1118 << endl;
+				//cholEstimate = 0;
 				snps_inx = LDgene(ldinx);
 				//cout <<"LDCurr " <<  LDCurr.t() << endl;
 				//cout << 1032 << " ldinx "<<  ldinx<<  " dfds "<< snps_inx.t()<< endl;
-				uvec nonzeroLD_proposal = snps_inx(find((proposal_gamMa(snps_inx) - Randu(snps_inx)) >= 0)); //sorted indices
-				uvec zeroLD_proposal = snps_inx(find((proposal_gamMa(snps_inx) - Randu(snps_inx)) < 0)); //sorted indices
+				proposal_gamMaCurr = proposal_gamMa(snps_inx);
+				pa1x_neg = prod(pa1x_vecneg(snps_inx));
+				pa1xNotLD_neg = 1;
+				double proposal_gamMaSum = sum(proposal_gamMaCurr);
 				//cout << trans(bf_singleCurr(snps_inx)) << " " <<trans( pa1x_vec(snps_inx)) << endl;
 				//cout << 1033 << " nonzeroLD_proposal "<<  nonzeroLD_proposal.t() << endl;
-				uvec nonzeroLD = snps_inx(find( gamMaCurr(snps_inx) > 0.5)); 
-				uvec zeroLD = snps_inx(find( gamMaCurr(snps_inx) <= 0.5)); 
-				//cout << gene << " snps "<< snps_inx.t() << " LD " <<  nonzeroLD.t() << " proposal " << nonzeroLD_proposal.t() << " trans_curr " << proposal_gamMa(snps_inx).t() << " pa1x " << pa1x_vec(snps_inx).t() << "bf_single " << bf_singleCurr(snps_inx).t()   << endl; 
+				uvec nonzeroLDInx =find( gamMaCurr(snps_inx) > 0.5); 
+				uvec nonzeroLD = snps_inx(nonzeroLDInx); 
+				uvec zeroLDInx =find( gamMaCurr(snps_inx) <= 0.5); 
+				uvec zeroLD = snps_inx(zeroLDInx); 
+				
 				//cout << 1034 << " nonzeroLD_ "<<  nonzeroLD.t() << endl;
 				//if gamMa proposal is same then accept
-				accept = 0; qqLD = nonzeroLD.size() ; qqLD_proposal = nonzeroLD_proposal.size();
+				accept = 0; qqLD = nonzeroLD.size() ;
 				//cout << 1035 << endl;
-				if(qqLD == qqLD_proposal ){
-				    if( sum(nonzeroLD_proposal == nonzeroLD) == qqLD) accept = 1; 
-				    //cout << 1036 << endl;
-				}
+
+				// if so include that in LD. 
+				// indices of included variables not in LD
+				int notqqLDLD = 0, cholEstimate =0;
+
 				//cout << " before  rotate " <<  nonzero.t() << endl;
 				//rotate all nonzeroLD 
 				if((qq > 0) && (qq > qqLD) && (qqLD > 0 )){ // if qqLD == qq don't need to rotate
-				    for (int rot = 0; rot < qqLD; rot++) 
-				    TT_curr = cholGivensRotateLeft(TT_curr);
+				    for (int rot = 0; rot < qqLD; rot++) TT_curr = cholGivensRotateLeft(TT_curr);
 				    nonzero_curr.set_size(qq);
-				    //cout << 1037 << endl;
 				    nonzero_curr(span(0,qq - qqLD - 1)) = nonzero(span( qqLD  , qq  -1 ));
 				    //cout << 1038 << endl;
 				    nonzero_curr(span(qq - qqLD , qq -1 )) = nonzero(span( 0  , qqLD  -1 ));
 				    //cout << 1039 << endl;
 				    nonzero = nonzero_curr; //rotated nonzero
+
+				    nonzeroNotLD = nonzero(span(0,qq - qqLD - 1));
+				}else{
+				    nonzeroNotLD = nonzero;
 				}
-				//cout << "after rotate " <<  nonzero.t() << endl;
-				if(accept !=1){
-				    qq_proposal = qq - qqLD;
-				    if (qq_proposal > 0){
-					TT_proposal = TT_curr(span(0,qq_proposal -1), span(0, qq_proposal -1) );
-					//cout << 1031 << endl;
-				    }else{
-					TT_proposal.set_size(1,1); TT_proposal.zeros();
-					//TT_proposal = zeros<mat>(1,1);
-					//cout << 1032 << endl;
+
+				int qqNotLD = qq - qqLD;
+				if(  qqNotLD > 0){
+				    //cout << 1150 << endl;
+				    umat xTxTemp = ( abs(xTx_gene(nonzeroNotLD, snps_inx)) >= (LDthres ) );
+				    //cout << 1151 << endl;
+				    uvec LDLDInx = find(sum(xTxTemp, 1) > 0);
+				    LDLD = nonzeroNotLD( LDLDInx);
+				    //nonzero_remaining = nonzeroNotLD(find(1- LDLDInx ));
+				    //cout << 1153 << endl;
+
+				    qqLDLD = LDLD.size();
+				    if(  qqLDLD > 0){
+					//cout << 1157 << endl;
+					vec RanduTemp = randu<vec>(LDLD.size()); // N(0, sigma_eff)
+					//cout << 1159 << endl;
+					pa1xNotLD_neg = prod(pa1x_vecneg(LDLD));
+					proposal_gamMaSum = proposal_gamMaSum + sum(proposal_gamMa(LDLD) );
+					proposal_gamMaNotLD = ( proposal_gamMa(LDLD))/( proposal_gamMaSum + (pa1xNotLD_neg * pa1x_neg));
+				        zeroLDLDInx = find((proposal_gamMaNotLD - RanduTemp) < 0);// this indicies are with respect to LDLD
+					//cout << "zeroLDLDInx " << zeroLDLDInx << endl;
+					zeroNotLD_proposal = LDLD(zeroLDLDInx);  // nonzero snps in LD with current LDBlock that will be zero 
+					//cout << "pa1xNotLD_neg " <<pa1xNotLD_neg << " proposal_gamMaNotLD " << proposal_gamMaNotLD  << "sum"<<   ( proposal_gamMaSum + (pa1xNotLD_neg * pa1x_neg)) << "zeroNotLD_proposal" << zeroNotLD_proposal <<  endl;
+					notqqLDLD = zeroNotLD_proposal.size();
+					if(notqqLDLD > 0){ 
+					    uvec nonzeroNotLD_proposalInx = ones<uvec>(qqNotLD);
+					    //cout << "LDLDInx " << LDLDInx.t() << " zeroLDLDInx \t " << zeroLDLDInx.t() <<  " nonzeroNotLD \t " << nonzeroNotLD.t() << " noqqLDLD " << notqqLDLD << " inx "<< LDLDInx(zeroLDLDInx) << endl;
+					    nonzeroNotLD_proposalInx(LDLDInx(zeroLDLDInx)) = zeros<uvec>(notqqLDLD);
+					    //cout << "	nonzeroNotLD_proposalInx" << nonzeroNotLD_proposalInx << endl;
+					    nonzeroNotLD_proposal = nonzeroNotLD(find( nonzeroNotLD_proposalInx));
+					    //cout << 1160 << endl;
+					    cholEstimate  = 1;
+					    accept = 0;
+					}
 				    }
-				    qq_proposal = qq_proposal + qqLD_proposal;
-				    nonzero_proposal =  nonzero; 
-				    //if(qqLD_proposal ==1) cout << "this 1 "  <<  nonzero_proposal.t() << endl;
-				    nonzero_proposal.resize(qq_proposal);
-				    //if(qqLD_proposal ==1) cout << "this  2 "  <<  nonzero_proposal.t() << endl;
-				    if(qqLD_proposal > 0){
-					//cout << 1033 << " " << qq_proposal << " " << qqLD_proposal << " " << nonzeroLD_proposal << endl;
-					nonzero_proposal(span(qq_proposal - qqLD_proposal , qq_proposal -1 )) = nonzeroLD_proposal;
-					//if(qqLD_proposal ==1) cout << "this 3 "  <<  nonzero_proposal.t() << endl;
-					//cout << 1034 << endl;
-					for (int rot = 0; rot < qqLD_proposal; rot++){
-					    xTx_snp_gene = xTx_gene.col(nonzeroLD_proposal(rot));
-					    //cout << 1055 << endl;
-					    //cout << qq - qqLD + rot <<" nz prop "  << nonzero_proposal.size() << endl;  
-					    //cout <<  xTx_snp_gene.size() <<" nz prop "  << trans(nonzero_proposal( span(0, qq - qqLD +rot) )) << endl;  
-					    if((qq - qqLD + rot) > 0){
-						TT_proposal = cholAddCol(TT_proposal, xTx_snp_gene(nonzero_proposal(span(0, qq - qqLD + rot))));
-					    }else{
-						TT_proposal.set_size(1,1); 
-						tempd = sqrt(xTx_snp_gene(nonzero_proposal(0)));
-						TT_proposal(0,0) = (tempd > 0) ? tempd : (-1*tempd);
+				}
+				proposal_gamMaCurr = proposal_gamMaCurr /( proposal_gamMaSum +  (pa1xNotLD_neg * pa1x_neg)); 
+				uvec nonzeroLD_proposalInx = find((proposal_gamMaCurr - Randu(snps_inx)) >= 0); 
+				uvec nonzeroLD_proposal = snps_inx(nonzeroLD_proposalInx); //sorted indices
+				uvec zeroLD_proposalInx = find((proposal_gamMaCurr - Randu(snps_inx)) < 0); 
+				uvec zeroLD_proposal = snps_inx(zeroLD_proposalInx); //sorted indices
+				qqLD_proposal = nonzeroLD_proposal.size();
+				//cout << gene << " snps "<< snps_inx.t() << " LD " <<  nonzeroLD.t() << " proposal " << nonzeroLD_proposal.t() << " trans_curr " << proposal_gamMaCurr.t() << " pa1x " << pa1x_vec(snps_inx).t() << "bf_single " << bf_singleCurr(snps_inx).t()   << endl; 
+				//cout << "Randu(snps_inx)" << Randu(snps_inx).t() << " proposal_gamMaCurr" << proposal_gamMaCurr.t() << endl; 
+				//cout << 1181 << endl;
+				//if(qqLDLD > 0){
+				    //if( (qqLDLD == qqLDLD_proposal) ){
+					//cholEstimate=0; // no need check each bit because they were all one anyone change will change qqLDLD_proposal
+					//cout << 1036 << endl;
+				    //}
+				//}
+				if(cholEstimate ==0){
+				    if(qqLD == qqLD_proposal ){
+					if( sum(nonzeroLD_proposal == nonzeroLD) == qqLD) accept = 1; 
+					//cout << 1037 << endl;
+				    }
+				}
+				//cout << 101138<< " accept "<<  accept << endl;
+				if(accept !=1){
+				    if(cholEstimate==1){
+					//cout << 1216 <<endl;
+					// nonzero_proposal
+					qq_proposal = qq - qqLD - notqqLDLD;
+					qq_proposal = qq_proposal + qqLD_proposal;
+					//cout << 1199 << endl;
+					if(qq_proposal > 0){
+					    nonzero_proposal = join_cols( nonzeroNotLD_proposal,  nonzeroLD_proposal);
+					    //cout << " nonzeroLDLD_proposal " <<  nonzero_proposal.t() << endl; 
+					    //cout << "chol "<< xTx_gene(nonzero_proposal, nonzero_proposal)  << endl;
+					    TT_proposal = chol(xTx_gene(nonzero_proposal, nonzero_proposal));
+					}else{
+					    nonzero_proposal.clear(); 
+					    TT_proposal.set_size(1,1); TT_proposal.zeros();
+					}
+					prior_changeNotLD =  prod(1- pa1x_vec( zeroNotLD_proposal))/prod( pa1x_vec( zeroNotLD_proposal));
+					trans_changeNotLD  = prod( 1- proposal_gamMaNotLD(zeroLDLDInx)) / prod(  proposal_gamMaNotLD(zeroLDLDInx)); 
+
+				    }else{
+					//cout << 1235 <<endl;
+					prior_changeNotLD = 1; trans_changeNotLD = 1;
+
+					qq_proposal = qq - qqLD;
+					if (qq_proposal > 0){
+					    TT_proposal = TT_curr(span(0,qq_proposal -1), span(0, qq_proposal -1) );
+					    //cout << 1031 << endl;
+					}else{
+					    TT_proposal.set_size(1,1); TT_proposal.zeros();
+					    //TT_proposal = zeros<mat>(1,1);
+					    //cout << 1032 << endl;
+					}
+					//cout << 1248 <<endl;
+					qq_proposal = qq_proposal + qqLD_proposal;
+					nonzero_proposal =  nonzero; 
+					//if(qqLD_proposal ==1) cout << "this 1 "  <<  nonzero_proposal.t() << endl;
+					nonzero_proposal.resize(qq_proposal);
+					//if(qqLD_proposal ==1) cout << "this  2 "  <<  nonzero_proposal.t() << endl;
+					if(qqLD_proposal > 0){
+					    //cout << 1033 << " " << qq_proposal << " " << qqLD_proposal << " " << nonzeroLD_proposal << endl;
+					    nonzero_proposal(span(qq_proposal - qqLD_proposal , qq_proposal -1 )) = nonzeroLD_proposal;
+					    //if(qqLD_proposal ==1) cout << "this 3 "  <<  nonzero_proposal.t() << endl;
+					    //cout << 1034 << endl;
+					    for (int rot = 0; rot < qqLD_proposal; rot++){
+						xTx_snp_gene = xTx_gene.col(nonzeroLD_proposal(rot));
+						//cout << 1055 << endl;
+						//cout << qq - qqLD + rot <<" nz prop "  << nonzero_proposal.size() << endl;  
+						//cout <<  xTx_snp_gene.size() <<" nz prop "  << trans(nonzero_proposal( span(0, qq - qqLD +rot) )) << endl;  
+						if((qq - qqLD + rot) > 0){
+						    TT_proposal = cholAddCol(TT_proposal, xTx_snp_gene(nonzero_proposal(span(0, qq - qqLD + rot))));
+						}else{
+						    TT_proposal.set_size(1,1); 
+						    tempd = sqrt(xTx_snp_gene(nonzero_proposal(0)));
+						    TT_proposal(0,0) = (tempd > 0) ? tempd : (-1*tempd);
+						}
+						//cout << 1056 << endl;
 					    }
-					    //cout << 1056 << endl;
 					}
 				    }
 				    //find gg_proposal
 				    //cout << nonzero_proposal.t() << "nz " << maskCurr.size() << endl;
 				    if(qq_proposal > 0) {
 					WW =  solve(trimatl(TT_proposal.t()), xTy(maskCurr(nonzero_proposal)));
-					//cout << 1037 << endl;
+					//cout << 1257 << endl;
 					R2 = sum(square(WW))/y2(gene); 
 					gg_proposal = (n - qq_proposal - 1.0)/2.0 * log(1 + ccCurr) - (n -1.0 )/2.0 * log(1.0+ccCurr*(1.0-R2));
 				    }else{
@@ -1218,23 +1361,34 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 				    }
 				    //gg_proposal = -qq_proposal/2.0 * log(1 + ccCurr) - (n + nu(gene))/2.0 * log (nu(gene) * lambdal(gene) + y2(gene)  -  sum(square(WW))/(1 + 1/ccCurr) );
 				    //cout << 1038 << endl;
-				    //find acceptance probability
+				    //cout << "bhow bhow!" <<endl;
+				    //cout << zeroLD_proposal.t() <<  " nonzeroLD" << endl;
+				    //cout << nonzeroLD.t() << "zeroLD " << endl;
+				    //cout << zeroLD.t() << endl;
+				    //cout << nonzeroLD_proposal.t() << " zeroLD_proposal " << endl; 
+				    ////find acceptance probability
+				    ////arma prod function is 1 if the matrix is empty and even prod(1-empty.matrix) is 1.        
 				    prior_proposal = prod( pa1x_vec(nonzeroLD_proposal)) * prod(1 - pa1x_vec(zeroLD_proposal));
-				    trans_proposal = prod(proposal_gamMa(nonzeroLD_proposal)) * prod(1 - proposal_gamMa(zeroLD_proposal)); 
+				    //cout << 1039 << endl;
+				    trans_proposal = prod(proposal_gamMaCurr(nonzeroLD_proposalInx)) * prod(1 - proposal_gamMaCurr(zeroLD_proposalInx)); 
+				    //cout << 1040 << endl;
 				    prior_curr = prod( pa1x_vec(nonzeroLD)) * prod(1 - pa1x_vec(zeroLD));
-				    trans_curr = prod( proposal_gamMa(nonzeroLD)) * prod(1 - proposal_gamMa(zeroLD)); 
+				    //cout << 1041 << endl;
+				    trans_curr = prod( proposal_gamMaCurr(nonzeroLDInx)) * prod(1 - proposal_gamMaCurr(zeroLDInx)); 
 				    //cout << 1174 << endl;
-				    accept = exp( gg_proposal - gg_curr) * prior_proposal/prior_curr * trans_curr/trans_proposal;
-				    //cout << gene << " snps "<< snps_inx << " accept " <<  accept <<  " gg_proposal "<< gg_proposal << " gg_curr  "<< gg_curr <<  " prior_proposal "<< prior_proposal << " prior_curr  "<< prior_curr <<  " trans_curr "<<  trans_curr << " trans_proposal " <<  trans_proposal << endl;
+				    accept = exp( gg_proposal - gg_curr) * (prior_proposal/prior_curr) * (trans_curr/trans_proposal) * (prior_changeNotLD /trans_changeNotLD);
+				    //cout << gene << " snps "<< snps_inx.t() << " accept " <<  accept <<  " gg_proposal "<< gg_proposal << " gg_curr  "<< gg_curr <<  " prior_proposal "<< prior_proposal *prior_changeNotLD << " prior_curr  "<< prior_curr  << " trans_proposal " <<   trans_proposal *trans_changeNotLD <<  " trans_curr "<< trans_curr<<  endl;
+				    //cout << nonzero.t() << "nz " << nonzero_proposal.t() << endl;
 				    randDraw = randu(1);
 				    if(verbose){
-					    bfCurr(nonzeroLD) = zeros<vec>(qqLD);
-					    bfCurr(nonzeroLD_proposal) = ones<vec>(qqLD_proposal);
-					    gamMa_rate(snps_inx) = zeros<vec>(snps_inx.size());
+					//bfCurr(nonzeroLD) = zeros<vec>(qqLD);
+					//bfCurr(nonzeroLD_proposal) = ones<vec>(qqLD_proposal);
+					gamMa_rate(snps_inx) = zeros<vec>(snps_inx.size());
 				    }
 
 				    if( accept > randDraw(0) ){
 					gamMaCurr(nonzeroLD) = zeros<vec>(qqLD);
+					if(cholEstimate ==1) gamMaCurr(zeroNotLD_proposal) = zeros<vec>(zeroNotLD_proposal.size());
 					gamMaCurr(nonzeroLD_proposal) = ones<vec>(qqLD_proposal);
 					nonzero = nonzero_proposal; 
 					gg_curr = gg_proposal;
@@ -1244,8 +1398,9 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 					    gamMa_rate(snps_inx) = ones<vec>(snps_inx.size());
 					}
 				    }
+				    //cout << nonzero.t() << "nz " << maskCurr.size() << endl;
 				}
-				//cout << nonzero.t() << "nz " << maskCurr.size() << endl;
+				//cout <<  ldinx  << " ld inx " << gene << "gene " << endl;
 			    }
 			    //find gamMa_prob
 			    vec pax1_vec =  gamMaCurr* log(a11/a10)  + (1-gamMaCurr ) * log( (1 - a11)/(1 - a10));  
@@ -1386,6 +1541,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 
 		    ransampl_free( ws );
 		}
+		//cout << gene << "gene done" << endl;
 	    }
 	    beTaAcc = beTaAcc + beTa;
 	    //gamMaAcc = gamMaAcc + gamMa;
@@ -1420,22 +1576,38 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 
 	    //adjusting gamMa_prob
 	    bool use_logisitic = true;
+	    double bias_adjusted = 0;
 	    if (use_logisitic) {
-		if ((regulator_prior > 0) && (iter > 0)){
+		if ((regulator_prior > 0) && (iter > 0) ){
 		    uvec temp1= find(gamMa_prob > 0.0);
 		    int ynum =  (temp1).size();
 		    cout<< "number of regulatory enhancers \t " << ynum << endl;
 		    vec gamMa_sort = sort(gamMa_prob);
 		    int reg_inx = regulator_prior * p;
-		    gamMa_prob = logistic(gamMa_prob - gamMa_sort(p - reg_inx)); 
-		    temp1=find(gamMa_prob > 0.5);
-		    cout<< "number of regulatory enhancers after adjustment \t " << temp1.size() << endl;
+		    bias_adjusted = gamMa_sort(p - reg_inx);
+		    //alpHa(0) = alpHa(0) - bias_adjusted;
+		    gamMa_prob = gamMa_prob - bias_adjusted;
+		    temp1=find(gamMa_prob > 0);
+		    cout<< "number of regulatory enhancers after adjustment \t " << temp1.size() << " \t bias adjusted =" << bias_adjusted << endl;
 		}
+		    gamMa_prob = logistic(gamMa_prob ); 
 	    }
 
 	    int logitIter = 2;
 	    for (int logitCnt = 0; logitCnt < logitIter; logitCnt++) {
 		if(balance){
+		    //cout<< "here" << gamMa_rateAcc.n_cols<<endl;
+		    if(usebeTaprob) beTaABS = mean(beTaAcc,1);
+		    //cout<< "here1" <<gamMaABS.size() << endl;
+		    //if((iter+1) >= accIter){
+			//if (((iter+1) % accIter)==0) { 
+			    //beTaABS = ABS(beTaAcc)/accIter;
+			    //gamMaABS = sum(gamMa_rateAcc);
+			//}
+		    //} else {
+			//beTaABS = ABS(beTa);
+			//gamMaABS = gamMa;
+		    //}
 		    colvec nonzero_prob;
 		    if (usebeTaprob) {
 			nonzero_logitInx = ((gamMa > gamMa_thres) % (beTaABS > beTa_thres)); 
@@ -1446,10 +1618,17 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 		    colvec zero_prob = ones(zero_logit.size());
 		    zero_prob = zero_prob - gamMaABS(zero_logit);
 		    int postrain_num = (num_logit_train > -1) ? min( nonzero_logit.size()*ratio , num_logit_train/2):  nonzero_logit.size();
+		    //int negtrain_num = (num_logit_train > -1) ? min( zero_logit.size()*ratio , num_logit_train/2):  zero_logit.size();
+		    //int train_num = min(postrain_num, negtrain_num);
 		    int train_num = postrain_num;
+		    //negtrain_num = train_num*2;
+		    //negtrain_num = 10000;
+		    //train_num = min(num_logit_train/2, train_num);
+		    //num_logit_postrain = min( num_logit_train/2,  nonzero_logit * ratio) ;
+		    //int num_logit_negtrain = min( num_logit_train/2,  (p - nonzero_logit)*ratio) ;
 		    logit_freq.zeros();
 		    geneEpi_freq.zeros();
-		    //cout <<"train_num \t"<< train_num << "\t" << negtrain_num << "\t" << train_num << "\t"<< gamMa_thres    << endl;
+		    cout <<"train_num \t"<< train_num << "\t" << negtrain_num << "\t" << train_num << "\t"<< gamMa_thres    << endl;
 		    if(train_num > (f/2 +1) ){
 			ret1 = sample(nonzero_logit.size(), Named("size", train_num), Named("prob", nonzero_prob),Named("replace", false));
 			for (int tt = 0; tt < ret1.size(); tt++) 
@@ -1459,6 +1638,9 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 			ret1 = sample(nonzero_logit.size(), Named("size", f/2.0 + 1), Named("prob", nonzero_prob),Named("replace", true));
 			for (int tt = 0; tt < ret1.size(); tt++) 
 			logit_freq(nonzero_logit(ret1[tt] -1)) = logit_freq(nonzero_logit(ret1[tt] -1)) + 1;
+			//ret1 = sample(p, Named("size", f/2 + 1), Named("prob", nonzero_prob), Named("replace", true));
+			//for (int tt = 0; tt < ret1.size(); tt++) 
+			//logit_freq(ret1[tt] -1) = logit_freq(ret1[tt] -1) + 1;
 		    }
 		    ret2 = sample(p , Named("size", negtrain_num),  Named("replace", false));
 		    for (int tt = 0; tt < ret2.size(); tt++) 
@@ -1671,6 +1853,21 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 	    //}
 	    //uvec temp1=find((logistic(featureCat * alpHa)) > 0.5);
 	    //cout<< "number of enhancers \t " << temp1.size() << endl;
+	    alpHaAdj = alpHa;
+	    aTf = featureCat * alpHaAdj;
+		if ((regulator_prior > 0)  ){
+		    uvec temp1= find(aTf > 0.0);
+		    int ynum =  (temp1).size();
+		    cout<< "number of regulatory enhancers \t " << ynum << endl;
+		    vec gamMa_sort = sort(aTf);
+		    int reg_inx = regulator_prior * p;
+		    bias_adjusted = gamMa_sort(p - reg_inx);
+		    alpHaAdj(0) = alpHa(0) - bias_adjusted;
+		    aTf = aTf - bias_adjusted;
+		    temp1=find(aTf > 0);
+		    cout<< "number of regulatory enhancers after adjustment \t " << temp1.size() << " \t bias adjusted =" << bias_adjusted << endl;
+		}
+		    gamMa_prob = logistic(gamMa_prob ); 
 	    cout<<"alpHa \t"<< alpHa.t() <<endl;
 
 	}
@@ -1683,7 +1880,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 
     }
     out["alpHa.mat"] = trans(alpHa_mat); out["beTa.mat"] = trans(beTa_mat); out["gamMa.mat"] = trans(gamMa_mat); out["gamMa_rate.mat"] = trans(gamMa_rate_mat); out["gamMa.prob.mat"] = trans(gamMa_prob_mat); out["cc.mat"] = trans(cc_mat);out["sigma2.mat"] = trans(sigma2_mat); out["ev"] = trans(ev_mat);
-    out["bf.mat"] = trans(bf_mat);	
+    out["bf.mat"] = trans(bf_mat); out["bf.single"] = bf_single;	
     if(logistic_variable_selection)  out["logistic_select"] = logistic_select_mat.t(); 
     if(verbose) 
     { 
@@ -1693,6 +1890,7 @@ Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeatu
 
     return out;
 }
+
 
 
 

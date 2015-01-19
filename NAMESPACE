@@ -1,3 +1,4 @@
 useDynLib(GOAL)
 importFrom(Rcpp, evalCpp)
+importFrom(BayesLogit, rpg)
 exportPattern("^[[:alpha:]]+")

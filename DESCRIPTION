@@ -1,7 +1,7 @@
 Package: GOAL
 Type: Package
 Title: Genetic Omics Association resolve Linkage. GOAL integrates epigenetics and genetics to identify causal SNPs underlying expression variability. 
-Version: 1.0
+Version: 0.99.0
 Date: 2014-09-08
 Author: Avinash Das, Sridhar Hannenhalli
 Maintainer: Avinash Das <vinash85@umiacs.umd.edu>
