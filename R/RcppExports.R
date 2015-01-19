@@ -41,7 +41,7 @@ rinvgammaC <- function(shape, scale) {
     .Call('GOAL_rinvgammaC', PACKAGE = 'GOAL', shape, scale)
 }
 
-GOAL <- function(x, y, feature, pairFeature, mask2, alpHa, gamMa, estimate_alpha, estimate_beta, B_inv_alpHa, itermax, thin, burnIn, threads, verbose = TRUE, balance = TRUE, logistic_variable_selection = TRUE, oversample = FALSE, sample_logit = FALSE, use_raoblackwell = TRUE, num_logit_train = 1000L, negtrain_num = 1000L, ratio = 1, gamMa_thres = .5, beTa_thres = .1, regulator_prior = 1.0/300.0, accIter = 1L, rho = 100.0, prior = .1) {
+GOAL <- function(x, y, feature, pairFeature, mask2, alpHa, gamMa, estimate_alpha, estimate_beta, B_inv_alpHa, itermax, thin, burnIn, threads, verbose = TRUE, balance = TRUE, logistic_variable_selection = TRUE, oversample = FALSE, sample_logit = FALSE, use_raoblackwell = TRUE, num_logit_train = 1000L, negtrain_num = 1000L, ratio = 1, gamMa_thres = .9, beTa_thres = .1, regulator_prior = 1.0/300.0, accIter = 1L, rho = 100.0, prior = .1) {
     .Call('GOAL_GOAL', PACKAGE = 'GOAL', x, y, feature, pairFeature, mask2, alpHa, gamMa, estimate_alpha, estimate_beta, B_inv_alpHa, itermax, thin, burnIn, threads, verbose, balance, logistic_variable_selection, oversample, sample_logit, use_raoblackwell, num_logit_train, negtrain_num, ratio, gamMa_thres, beTa_thres, regulator_prior, accIter, rho, prior)
 }
 

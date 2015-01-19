@@ -557,7 +557,7 @@ void logistic_variable_selection_mcmc( arma::mat x, arma::vec y, arma::vec& gamM
 using namespace arma;		// shorthand
 // [[Rcpp::depends("RcppArmadillo")]]
 // [[Rcpp::export]]
-Rcpp::List epi_eQTL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, int negtrain_num =1000, double ratio = 1, double gamMa_thres = .9, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1)
+Rcpp::List GOAL(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa,   arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int  thin, int burnIn,  int threads, bool verbose=true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false,bool  sample_logit = false, bool use_raoblackwell =true, int num_logit_train = 1000, int negtrain_num =1000, double ratio = 1, double gamMa_thres = .9, double beTa_thres=.1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1)
 {
     //regulator_prior = 0 : implies no re-estimation of alpha. num_logit_train = -1: no threshold is applied.
     if(gamMa_thres ==0) {
