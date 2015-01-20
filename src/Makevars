@@ -1,8 +1,9 @@
 ## Use the R_HOME indirection to support installations of multiple R version
-PKG_LIBS = -L/cbcbhomes/vinash85/usr/local/lib  -lransampl $(SHLIB_OPENMP_CXXFLAGS) -fopenmp -lgomp $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -L/cbcb/software/hcorradaR/gcc-4.6.1/install/R-3.0.2/lib64/R/lib -lRlapack `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` 
 OBJECTS = Matrix.o MatrixFrame.o RRNG.o RNG.o FSF_nmix.o LogitWrapper.o \
 	PolyaGamma.o PolyaGammaAlt.o PolyaGammaSP.o InvertY.o \
 	RcppExports.o  epi_eQTL.o
-PKG_CXXFLAGS = -fopenmp -I"/cbcbhomes/vinash85/R/x86_64-unknown-linux-gnu-library/3.0/RcppProgress/include" -DUSE_R -DNDEBUG -DDISABLE_SINGLE -DNTHROW -DDISABLE_FIO## 
-#FFLAGS= -ggdb 
-#PKG_CXXFLAGS= -fopenmp -I"/cbcbhomes/vinash85/R/x86_64-unknown-linux-gnu-library/3.0/RcppProgress/include"
+	#PKG_CXXFLAGS = -fopenmp -I"/cbcbhomes/vinash85/R/x86_64-unknown-linux-gnu-library/3.0/RcppProgress/include" -DUSE_R -DNDEBUG -DDISABLE_SINGLE -DNTHROW -DDISABLE_FIO## 
+PKG_LIBS += -lransampl $(SHLIB_OPENMP_CXXFLAGS) -fopenmp -lgomp $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -lRlapack `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` 
+PKG_CXXFLAGS = -DUSE_R -DNDEBUG -DDISABLE_SINGLE -DNTHROW -DDISABLE_FIO## 
+#to include gsl and ransampl path (this change can be made in global Makevars at ~/.R/Makevars
+#PKG_LIBS = -L(PATH TO LOCAL ransampl and gsl lib)   -lransampl $(SHLIB_OPENMP_CXXFLAGS) -fopenmp -lgomp $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -lRlapack `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` 
