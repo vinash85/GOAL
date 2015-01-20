@@ -96,7 +96,7 @@
   rho <- 100 
   out <- GOAL(x=x1, y=obj$y, feature=obj$feature, pairFeature=obj$pairFeature, 
   mask = mask3, alpHa=alpHa, ratio =1, gamMa = gamMa,  estimate_alpha=TRUE,
-  estimate_beta=TRUE, B_inv_alpHa=rep(1/1000,  numF), itermax = 200, thin= 1,
+  estimate_beta=TRUE, B_inv_alpHa=rep(1/1000,  numF), itermax = 20, thin= 1,
   burnIn=0, threads=1, gamMa_thres = .5, beTa_thres=0, balance=TRUE, 
   use_raoblackwell =FALSE, logistic_variable_selection=FALSE, num_logit_train=500,
   regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho, verbose=FALSE)

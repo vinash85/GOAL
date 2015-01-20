@@ -7,7 +7,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
     numSNPAll <- ceiling(numSNP *( numGenes/2 + .5))
     ldblock =2 
     indep.SNP <- ceiling(numSNPAll/ldblock)
-    x.indep <- matrix(sample(x=c(0,1,2,NA) ,size= indep.SNP*numSamp, replace=T , prob=c(.6, .25, .15, .002)), ncol=indep.SNP, nrow=numSamp)
+    x.indep <- matrix(sample(x=c(0,1,2,NA) ,size= indep.SNP*numSamp, replace=TRUE , prob=c(.6, .25, .15, .002)), ncol=indep.SNP, nrow=numSamp)
     x <- matrix( rbind(x.indep,x.indep), nrow=numSamp)[,1:numSNPAll]  
     x.nona = x
     #cat("here")
@@ -46,7 +46,7 @@ generate.epieQTL.logistic <- function ( numSNP = 512, avg.eSNP=20,numGenes = 1, 
     snpinx <- 1:numSNPAll;
     temp1 <- snpinx[!(snpinx %in% enhancerLDblock)]
     if (length(temp1) < sum(nenhancer) ) stop("increase number of SNP per gene, too many enhancers")
-    noneeSNP.enhancer  <- sample(temp1, size=sum(nenhancer), replace=F)  
+    noneeSNP.enhancer  <- sample(temp1, size=sum(nenhancer), replace=FALSE)  
     enhancer1  <-  unique(c(unlist(enhancer), noneeSNP.enhancer)) 
     
     nonenhancer <- which( !(seq(numSNPAll) %in% enhancer1))
