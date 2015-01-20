@@ -1,0 +1,77 @@
+---
+title: "GOAL"
+author: "Avinash Das, Sridhar Hannenhalli"
+date: "January 20, 2015"
+output: pdf_document
+---
+
+GOAL implements eQTeL model that integrates epigenetic and genetic to infer causal
+regulatory SNPs that can predict indivudal-specific expression. GOAL estimates regulatory potential and interaction potential of a SNP using epigenetic dat, and uses them as a prior of a SNP to be a regulating expression. The distinct feature of GOAL is it infer both expression-regualtors and different potential 
+jointly using a MCMC sampler. 
+
+eQTeL needs:
+- Gene expression (across indviduals)
+- Genotype (across indviduals)
+- Epigenetic features
+- Map describing which SNPs should be considered for each gene
+- Linkage disequilibrium block. 
+
+## Example 
+==========================================================
+As an example lets us generate a simulated data and run eQTeL 
+
+`generate.epieQTL.logistic` can be used to generate a simulated data for input to eQTeL.  
+```{r chunkName, eval=FALSE}
+featureStat= list(enhancer=list(mean=rep(2, 7), cov=diag(7)) ,
+  	  random= list(mean=rep(0, 7), cov=2*diag(7)))
+obj <- generate.epieQTL.logistic( numSNP = 512, avg.eSNP=5,numGenes = 100, 
+numSamp=1000, numFeature=7, featureStat= featureStat, seed=NULL, evSNP =0.15)
+```
+The above simulated data assumes : 
+- Feature distribution of epigenetic is normal with means 2 for enhancers and 0 for non-enhancers. 
+- For each gene 512 SNPs are considered.
+- There are 7 epigenetic features.
+(refer to help of generate.epieQTL.logistic for details.)
+
+>Preprocessing
+Once the simulated data is ready, some preprocessing of the data is required:
+
+```{r preprocessing, eval=FALSE}
+obj$pairFeature.mat <- matrix(0,0,0 )
+  x1 <- obj$x
+  x1[is.na(obj$x)] <- 0
+```
+Remove NA from both genotype and gene expression data either by impuation of approximation. In the example we assumed NA's are zero.
+
+## Intialization of parameters
+We then initialize the parameters: 
+```{r initialization, eval=FALSE}
+  pairf = ncol(obj$pairFeature.mat)
+  if(is.null(pairf)) pairf=0;
+  numF <- dim(obj$feature)[2]+ pairf + 1 
+  gamMa <- as.matrix(rep(0, nrow(obj$mask2)) )
+  alpHa <- as.matrix(rep(0,numF))
+  temp <- rep(1: ceiling(nrow(obj$mask2)/2), each=2)
+  mask3 = cbind( obj$mask2, temp)  
+  regulator_prior = .2 
+  B_inv_alpHa = rep(1/1000, numF)
+  B_inv_alpHa[1] = 1/10000
+  prior <- .04
+  rho <- 100 
+```
+
+## eQTeL model 
+
+Finally we run this on eQTeL model:
+
+```{r eQTeL, eval=FALSE}
+out <- GOAL(x=x1, y=obj$y, feature=obj$feature, pairFeature=obj$pairFeature, 
+  mask = mask3, alpHa=alpHa, ratio =1, gamMa = gamMa,  estimate_alpha=TRUE,
+  estimate_beta=TRUE, B_inv_alpHa=rep(1/1000,  numF), itermax = 20, thin= 1,
+  burnIn=0, threads=1, gamMa_thres = .5, beTa_thres=0, balance=TRUE, 
+  use_raoblackwell =FALSE, logistic_variable_selection=FALSE, num_logit_train=500,
+  regulator_prior=regulator_prior, accIter=10, prior=prior, rho=rho, verbose=FALSE)
+```
+
+The example run for 20 iteration, with thining paramter =1 and burnin =0. Refer to help of GOAL for additional details. 
+
