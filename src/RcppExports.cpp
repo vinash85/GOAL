@@ -224,6 +224,49 @@ BEGIN_RCPP
     return __sexp_result;
 END_RCPP
 }
+// GOAL_per_gene
+Rcpp::List GOAL_per_gene(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa, arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int thin, int burnIn, int threads, bool verbose = true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false, bool sample_logit = false, bool use_raoblackwell = true, int num_logit_train = 1000, int negtrain_num = 1000, double ratio = 1, double gamMa_thres = .9, double beTa_thres = .1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 100.0, double prior = .1);
+RcppExport SEXP GOAL_GOAL_per_gene(SEXP xSEXP, SEXP ySEXP, SEXP featureSEXP, SEXP pairFeatureSEXP, SEXP mask2SEXP, SEXP alpHaSEXP, SEXP gamMaSEXP, SEXP estimate_alphaSEXP, SEXP estimate_betaSEXP, SEXP B_inv_alpHaSEXP, SEXP itermaxSEXP, SEXP thinSEXP, SEXP burnInSEXP, SEXP threadsSEXP, SEXP verboseSEXP, SEXP balanceSEXP, SEXP logistic_variable_selectionSEXP, SEXP oversampleSEXP, SEXP sample_logitSEXP, SEXP use_raoblackwellSEXP, SEXP num_logit_trainSEXP, SEXP negtrain_numSEXP, SEXP ratioSEXP, SEXP gamMa_thresSEXP, SEXP beTa_thresSEXP, SEXP regulator_priorSEXP, SEXP accIterSEXP, SEXP rhoSEXP, SEXP priorSEXP) {
+BEGIN_RCPP
+    SEXP __sexp_result;
+    {
+        Rcpp::RNGScope __rngScope;
+        Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP );
+        Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP );
+        Rcpp::traits::input_parameter< arma::mat >::type feature(featureSEXP );
+        Rcpp::traits::input_parameter< arma::mat >::type pairFeature(pairFeatureSEXP );
+        Rcpp::traits::input_parameter< arma::umat >::type mask2(mask2SEXP );
+        Rcpp::traits::input_parameter< arma::colvec >::type alpHa(alpHaSEXP );
+        Rcpp::traits::input_parameter< arma::colvec >::type gamMa(gamMaSEXP );
+        Rcpp::traits::input_parameter< bool >::type estimate_alpha(estimate_alphaSEXP );
+        Rcpp::traits::input_parameter< bool >::type estimate_beta(estimate_betaSEXP );
+        Rcpp::traits::input_parameter< arma::colvec >::type B_inv_alpHa(B_inv_alpHaSEXP );
+        Rcpp::traits::input_parameter< int >::type itermax(itermaxSEXP );
+        Rcpp::traits::input_parameter< int >::type thin(thinSEXP );
+        Rcpp::traits::input_parameter< int >::type burnIn(burnInSEXP );
+        Rcpp::traits::input_parameter< int >::type threads(threadsSEXP );
+        Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP );
+        Rcpp::traits::input_parameter< bool >::type balance(balanceSEXP );
+        Rcpp::traits::input_parameter< bool >::type logistic_variable_selection(logistic_variable_selectionSEXP );
+        Rcpp::traits::input_parameter< bool >::type oversample(oversampleSEXP );
+        Rcpp::traits::input_parameter< bool >::type sample_logit(sample_logitSEXP );
+        Rcpp::traits::input_parameter< bool >::type use_raoblackwell(use_raoblackwellSEXP );
+        Rcpp::traits::input_parameter< int >::type num_logit_train(num_logit_trainSEXP );
+        Rcpp::traits::input_parameter< int >::type negtrain_num(negtrain_numSEXP );
+        Rcpp::traits::input_parameter< double >::type ratio(ratioSEXP );
+        Rcpp::traits::input_parameter< double >::type gamMa_thres(gamMa_thresSEXP );
+        Rcpp::traits::input_parameter< double >::type beTa_thres(beTa_thresSEXP );
+        Rcpp::traits::input_parameter< double >::type regulator_prior(regulator_priorSEXP );
+        Rcpp::traits::input_parameter< int >::type accIter(accIterSEXP );
+        Rcpp::traits::input_parameter< double >::type rho(rhoSEXP );
+        Rcpp::traits::input_parameter< double >::type prior(priorSEXP );
+        Rcpp::List __result = GOAL_per_gene(x, y, feature, pairFeature, mask2, alpHa, gamMa, estimate_alpha, estimate_beta, B_inv_alpHa, itermax, thin, burnIn, threads, verbose, balance, logistic_variable_selection, oversample, sample_logit, use_raoblackwell, num_logit_train, negtrain_num, ratio, gamMa_thres, beTa_thres, regulator_prior, accIter, rho, prior);
+        PROTECT(__sexp_result = Rcpp::wrap(__result));
+    }
+    UNPROTECT(1);
+    return __sexp_result;
+END_RCPP
+}
 // eQTL_empirical_prior
 Rcpp::List eQTL_empirical_prior(arma::mat x, arma::mat y, arma::mat feature, arma::mat pairFeature, arma::umat mask2, arma::colvec alpHa, arma::colvec gamMa, bool estimate_alpha, bool estimate_beta, arma::colvec B_inv_alpHa, int itermax, int thin, int burnIn, int threads, bool verbose = true, bool balance = true, bool logistic_variable_selection = true, bool oversample = false, bool sample_logit = false, bool use_raoblackwell = true, int num_logit_train = 1000, double ratio = .5, double gamMa_thres = .9, double beTa_thres = .1, double regulator_prior = 1.0/300.0, int accIter = 1, double rho = 1, double prior = .1);
 RcppExport SEXP GOAL_eQTL_empirical_prior(SEXP xSEXP, SEXP ySEXP, SEXP featureSEXP, SEXP pairFeatureSEXP, SEXP mask2SEXP, SEXP alpHaSEXP, SEXP gamMaSEXP, SEXP estimate_alphaSEXP, SEXP estimate_betaSEXP, SEXP B_inv_alpHaSEXP, SEXP itermaxSEXP, SEXP thinSEXP, SEXP burnInSEXP, SEXP threadsSEXP, SEXP verboseSEXP, SEXP balanceSEXP, SEXP logistic_variable_selectionSEXP, SEXP oversampleSEXP, SEXP sample_logitSEXP, SEXP use_raoblackwellSEXP, SEXP num_logit_trainSEXP, SEXP ratioSEXP, SEXP gamMa_thresSEXP, SEXP beTa_thresSEXP, SEXP regulator_priorSEXP, SEXP accIterSEXP, SEXP rhoSEXP, SEXP priorSEXP) {
