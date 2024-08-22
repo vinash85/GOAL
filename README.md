@@ -1,10 +1,10 @@
-GOAL
+<!--GOAL
 ====
 
 Genetic Omics Association resolve Linkage disequilibrium
 
 ==== 
-
+-->
 
 # GOAL: Genetic Omics Association resolve Linkage Disequilibrium
 
