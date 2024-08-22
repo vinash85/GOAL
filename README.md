@@ -19,6 +19,7 @@ git clone https://github.com/vinash85/GOAL.git
 cd GOAL
 ```
 
+
 ## Step 2: Install Dependencies
 
 ### 2.1. Install GSL
@@ -30,6 +31,15 @@ First, install the GNU Scientific Library (GSL) using your system’s package ma
 ```bash
 sudo apt-get update
 sudo apt-get install libgsl-dev
+```
+or
+```bash
+wget https://mirror.team-cymru.com/gnu/gsl/gsl-latest.tar.gz -O gsl-latest.tar.gz
+tar -zxvf gsl-latest.tar.gz
+cd gsl-*/
+./configure
+make
+sudo make install
 ```
 
 
